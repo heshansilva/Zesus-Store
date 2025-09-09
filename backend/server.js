@@ -5,7 +5,9 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes from "./routes/auth.route.js"; //importing the auth routes from a separate file.
 import productRoutes from "./routes/product.route.js"; //importing the product routes from a separate file.
-import cartRouter from "./routes/cart.route.js"; //importing the cart routes from a separate file.
+import cartRouters from "./routes/cart.route.js"; //importing the cart routes from a separate file.
+import couponRouters from "./routes/coupon.route.js"; //importing the coupon routes from a separate file.
+import paymentRoutes from "./routes/payment.route.js"; //importing the payment routes from a separate file.
 
 import { connectDB } from './lib/db.js'; //importing db
 
@@ -21,7 +23,9 @@ app.use(express.json()); // allows you to parse body of the requests
 //authentication
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRouter);
+app.use('/api/cart', cartRouters);
+app.use('/api/coupons', couponRouters);
+app.use('/api/payments', paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

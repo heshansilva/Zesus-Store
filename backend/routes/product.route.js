@@ -5,7 +5,7 @@ import { GetRangeCommand } from '@upstash/redis';
 
 const router = express.Router();
 
-router.get('/', protectRoute, adminRoute, getAllProducts);
+router.get('/', protectRoute, adminRoute, getAllProducts); // Admin-only route to get all products
 router.get('/featured', getFeaturedProducts); // Public route for featured products
 router.get('/recommendations', getRecommendedProducts); // Public route for recommended products
 router.get('/category/:category', getProductByCategory); // Public route for products by category
