@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes from "./routes/auth.route.js"; //importing the auth routes from a separate file.
 import productRoutes from "./routes/product.route.js"; //importing the product routes from a separate file.
+import cartRouter from "./routes/cart.route.js"; //importing the cart routes from a separate file.
 
 import { connectDB } from './lib/db.js'; //importing db
 
@@ -20,6 +21,7 @@ app.use(express.json()); // allows you to parse body of the requests
 //authentication
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
