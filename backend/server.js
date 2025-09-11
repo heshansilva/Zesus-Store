@@ -8,8 +8,9 @@ import productRoutes from "./routes/product.route.js"; //importing the product r
 import cartRouters from "./routes/cart.route.js"; //importing the cart routes from a separate file.
 import couponRouters from "./routes/coupon.route.js"; //importing the coupon routes from a separate file.
 import paymentRoutes from "./routes/payment.route.js"; //importing the payment routes from a separate file.
-
+import analyticsRoutes from "./routes/analytics.route.js"; //importing the analytics routes from a separate file. 
 import { connectDB } from './lib/db.js'; //importing db
+
 
 dotenv.config(); //calling the config method to load the variables
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRouters);
 app.use('/api/coupons', couponRouters);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
