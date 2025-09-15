@@ -9,6 +9,7 @@ import cartRouters from "./routes/cart.route.js"; //importing the cart routes fr
 import couponRouters from "./routes/coupon.route.js"; //importing the coupon routes from a separate file.
 import paymentRoutes from "./routes/payment.route.js"; //importing the payment routes from a separate file.
 import analyticsRoutes from "./routes/analytics.route.js"; //importing the analytics routes from a separate file. 
+
 import { connectDB } from './lib/db.js'; //importing db
 
 

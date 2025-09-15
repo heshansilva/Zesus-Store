@@ -1,4 +1,4 @@
-    import Coupon from "../models/coupon.model";
+    import Coupon from "../models/coupon.model.js";
 
     // Get coupon details for the authenticated user
     export const getCoupon = async (req, res) => {
