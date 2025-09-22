@@ -7,12 +7,12 @@ const generateTokens = (userID) => {
   const accessToken = jwt.sign({ userID }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });//used to authenticate user
   const refreshToken = jwt.sign({ userID }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });//used to obtain new access tokens
   return { accessToken, refreshToken };
-}
+};
 
 // Uses Redis (a fast in-memory database) to store the refresh token. Key format: refresh_token:<userID>
 const storeRefreshToken = async (userID, refreshToken) => {
   await redis.set(`refresh_token:${userID}`, refreshToken, { ex: 7 * 24 * 60 * 60 }); // Set expiration to 7 days
-}
+};
 
 // Set cookies
 const setCookies = (res, accessToken, refreshToken) => {
@@ -31,7 +31,7 @@ const setCookies = (res, accessToken, refreshToken) => {
     sameSite: "Strict",
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
-}
+};
 
 // Signup user
 export const signup =  async (req, res) => {
@@ -45,19 +45,22 @@ export const signup =  async (req, res) => {
     }
     const user = new User({ name, email, password }); // Create a new user instance
 
+    
+    // Save user to database
+    await user.save();
+
     //authenticate user
     const { accessToken, refreshToken } = generateTokens(user._id);
     await storeRefreshToken(user._id, refreshToken);
 
     setCookies(res, accessToken, refreshToken);
 
-    // Save user to database
-    await user.save();
     res.status(201).json({
       user: {
         _id: user._id,
-        name: user.name,
-        email: user.email
+			name: user.name,
+			email: user.email,
+		
       },
       message: "User created successfully"
     });
@@ -65,7 +68,7 @@ export const signup =  async (req, res) => {
      console.error(error);
     res.status(500).json({ message: "Error creating user", error: error.message || error.toString() });
   }
-}
+};
 
 // Login user
 export const login = async (req, res) => {
@@ -95,7 +98,7 @@ export const login = async (req, res) => {
     console.log("Error logging in:", error.message);
     res.status(500).json({ message: "Error logging in", error: error.message || error.toString() });
   }
-}
+};
 
 // Logout user
 export const logout =  async (req, res) => {
@@ -116,7 +119,7 @@ export const logout =  async (req, res) => {
     console.log("Error logging out:", error.message);
     res.status(500).json({ message: "Error logging out", error: error.message || error.toString() });
   }
-}
+};
 
 //this will refresh the access token
 export const refreshToken = async (req, res) => {
@@ -149,4 +152,13 @@ export const refreshToken = async (req, res) => {
     console.log("Error refreshing token:", error.message);
     res.status(500).json({ message: "Error refreshing token", error: error.message || error.toString() });
   }
+};
+
+export const getProfile = async (req, res) => {
+try {
+  res.json(req.user);
+
+} catch (error) {
+  res.status(500).json({message: "server error", error: error.message});
 }
+};

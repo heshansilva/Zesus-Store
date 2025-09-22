@@ -8,7 +8,7 @@
             res.json(coupon || null);
         } catch (error) {
             console.log("Error in getCoupon controller", error.message);
-            res.status(500).json({ message: "Internal server error", error: error.message });
+            res.status(500).json({ message: "Internal server error - controller", error: error.message });
         }
     };
 
@@ -35,6 +35,6 @@
              });
         } catch (error) {
             console.log("Error in validateCoupon controller", error.message);
-            res.status(500).json({ message: "Internal server error", error: error.message });
+            res.status(500).json({ message: "Internal server error - controller2", error: error.message });
         }
     };
