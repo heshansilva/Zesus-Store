@@ -36,13 +36,13 @@ export const useProductStore = create((set) => ({
 
 	// New function to fetch products by category
 	fetchProductsByCategory: async (category) => {
-		set({ loading: true });
+		set({ loading: true, products: [] }); // Clear products before fetching
 		try {
 			const response = await axios.get(`/products/category/${category}`);
 			set({ products: response.data.products, loading: false });
 		} catch (error) {
 			set({ error: "Failed to fetch products", loading: false });
-			toast.error(error.response.data.error || "Failed to fetch products");
+			//toast.error(error.response.data.error || "Failed to fetch products");
 		}
 	},
 	deleteProduct: async (productId) => {
@@ -79,7 +79,7 @@ export const useProductStore = create((set) => ({
 
 	// New function to fetch featured products
 	fetchFeaturedProducts: async () => {
-		set({ loading: true });
+		 set({ loading: true });
 		try {
 			const response = await axios.get("/products/featured");
 			set({ products: response.data, loading: false });
