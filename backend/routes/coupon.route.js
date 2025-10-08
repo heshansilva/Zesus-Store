@@ -6,5 +6,5 @@ import { getCoupon, validateCoupon } from "../controllers/coupon.controller.js";
 const router = express.Router();
 
 router.get("/", protectRoute, getCoupon); // Get coupon details
-router.get("/validate", protectRoute, validateCoupon); // Validate a coupon code  
+router.post("/validate", protectRoute, validateCoupon); // Validate a coupon code  
 export default router;

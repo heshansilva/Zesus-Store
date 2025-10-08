@@ -1,23 +1,20 @@
-
-import { stripe } from "../lib/stripe.js";
 import Coupon from "../models/coupon.model.js";
 import Order from "../models/order.model.js";
+import { stripe } from "../lib/stripe.js";
 
-// Create a Stripe Checkout Session
-export const createCheckoutSession =  async (req, res) => {
+// This endpoint creates a Stripe Checkout session and returns the session ID to the frontend
+export const createCheckoutSession = async (req, res) => {
 	try {
 		const { products, couponCode } = req.body;
 
-        // Makes sure products is an array and not empty.
 		if (!Array.isArray(products) || products.length === 0) {
 			return res.status(400).json({ error: "Invalid or empty products array" });
 		}
 
 		let totalAmount = 0;
 
-        //Create lineItems → Stripe’s format (name, image, unit price, quantity).
 		const lineItems = products.map((product) => {
-			const amount = Math.round(product.price * 100); // Stripe requires price in cents, so if a product is $12.50, we send 1250
+			const amount = Math.round(product.price * 100); // stripe wants u to send in the format of cents
 			totalAmount += amount * product.quantity;
 
 			return {
@@ -33,27 +30,24 @@ export const createCheckoutSession =  async (req, res) => {
 			};
 		});
 
-        // Check for coupon and apply discount if valid.
 		let coupon = null;
 		if (couponCode) {
-			coupon = await Coupon.findOne({ code: couponCode, userId: req.user._id, isActive: true }); // Check it belongs to this user and is still active.
+			coupon = await Coupon.findOne({ code: couponCode, userId: req.user._id, isActive: true });
 			if (coupon) {
-				totalAmount -= Math.round((totalAmount * coupon.discountPercentage) / 100); //If valid, reduce totalAmount by coupon’s discount %.
+				totalAmount -= Math.round((totalAmount * coupon.discountPercentage) / 100);
 			}
 		}
 
-        // Stripe Checkout Session creation
 		const session = await stripe.checkout.sessions.create({
-			payment_method_types: ["card"], // Accept card payments
-			line_items: lineItems, // Items being purchased
-			mode: "payment", // One-time payment
-			success_url: `${process.env.CLIENT_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`, // Redirect to frontend with session ID on success
-			cancel_url: `${process.env.CLIENT_URL}/purchase-cancel`, // Redirect to frontend on cancel
-            // if coupon exists, call helper (createStripeCoupon) to apply discount.
+			payment_method_types: ["card"],
+			line_items: lineItems,
+			mode: "payment",
+			success_url: `${process.env.CLIENT_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
+			cancel_url: `${process.env.CLIENT_URL}/purchase-cancel`,
 			discounts: coupon
 				? [
 						{
-							coupon: await createStripeCoupon(coupon.discountPercentage), 
+							coupon: await createStripeCoupon(coupon.discountPercentage),
 						},
 				  ]
 				: [],
@@ -70,59 +64,70 @@ export const createCheckoutSession =  async (req, res) => {
 			},
 		});
 
-        // If user spends $200 or more (20000 cents) → give them a new gift coupon (10% off).
 		if (totalAmount >= 20000) {
 			await createNewCoupon(req.user._id);
 		}
-        //Send Stripe’s session id (frontend will use it to redirect user to payment).Send total amount (converted back from cents → dollars).
 		res.status(200).json({ id: session.id, totalAmount: totalAmount / 100 });
-
 	} catch (error) {
 		console.error("Error processing checkout:", error);
 		res.status(500).json({ message: "Error processing checkout", error: error.message });
 	}
 };
 
-// Handle successful payment and create order
+// This endpoint is called after a successful payment to handle order creation and coupon deactivation
 export const checkoutSuccess = async (req, res) => {
-    
-    try {
-        const {sessionId} = req.body;
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
+	try {
+		const { sessionId } = req.body;
+		const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        if(session.payment_status === "paid"){
-            await Coupon.findOneAndUpdate(
-                { code: session.metadata.couponCode, userId: session.metadata.userId},
-                { isActive: false }
-            );
-            
-            //create a new product
-            const product = JSON.parse.parse(session.metadata.product);
-            const newOrder = new Order({
-                userId:session.metadata.userId,
-                products: product.map(product => ({
-                    productId: product._id,
-                    quantity: product.quantity,
-                    price: product.price
-                })),
-                totalAmount: session.amount_total / 100, // Convert cents to dollars
-                stripeSessionId: session.id,
-            });
-            await newOrder.save();
+		if (session.payment_status === "paid") {
+			if (session.metadata.couponCode) {
+				await Coupon.findOneAndUpdate(
+					{
+						code: session.metadata.couponCode,
+						userId: session.metadata.userId,
+					},
+					{
+						isActive: false,
+					}
+				);
+			}
 
-            return res.json({ 
-                success: true,
-                message: "Payment successful and order created.",
-                OrderId: newOrder._id
-            });
-        } 
-    } catch (error) {
-        console.error("Error processing checkout success:", error);
-        res.status(500).json({ message: "Error processing checkout success", error: error.message });
-    }
+			// create a new Order
+			const products = JSON.parse(session.metadata.products);
+			const newOrder = new Order({
+				user: session.metadata.userId,
+				products: products.map((product) => ({
+					product: product.id,
+					quantity: product.quantity,
+					price: product.price,
+				})),
+				totalAmount: session.amount_total / 100, // convert from cents to dollars,
+				stripeSessionId: sessionId,
+			});
+
+			await newOrder.save();
+
+			const User = require("../models/user.model.js"); // Import your User model
+			const user = await User.findById(session.metadata.userId);
+			if (user) {
+				user.cartItems = []; // Clear cart items
+				await user.save();
+			}
+
+			res.status(200).json({
+				success: true,
+				message: "Payment successful, order created, and coupon deactivated if used.",
+				orderId: newOrder._id,
+			});
+		}
+	} catch (error) {
+		console.error("Error processing successful checkout:", error);
+		res.status(500).json({ message: "Error processing successful checkout", error: error.message });
+	}
 };
 
-//helper function to create a Stripe coupon
+// Related portions of frontend/src/pages/PurchaseSuccessPage.jsx:
 async function createStripeCoupon(discountPercentage) {
 	const coupon = await stripe.coupons.create({
 		percent_off: discountPercentage,
@@ -132,11 +137,10 @@ async function createStripeCoupon(discountPercentage) {
 	return coupon.id;
 }
 
-//helper function to create a new coupon in our database
+// Generates a new coupon for the user after a successful purchase over $200
 async function createNewCoupon(userId) {
-	await Coupon.findOneAndDelete({ userId }); // First, delete any old coupon for this user.
+	await Coupon.findOneAndDelete({ userId });
 
-    // Then create new coupon:
 	const newCoupon = new Coupon({
 		code: "GIFT" + Math.random().toString(36).substring(2, 8).toUpperCase(),
 		discountPercentage: 10,
