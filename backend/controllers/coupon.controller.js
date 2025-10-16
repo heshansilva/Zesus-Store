@@ -15,7 +15,7 @@
     // Validate a coupon code for the authenticated user
     export const validateCoupon = async (req, res) => {
         try {
-            const { code } = req.query;
+            const { code } = req.body;
             const coupon = await Coupon.findOne({ code: code, userId: req.user._id, isActive: true });
 
             if (!coupon) {

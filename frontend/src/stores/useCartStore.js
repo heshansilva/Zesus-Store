@@ -12,7 +12,7 @@ export const useCartStore = create((set, get) => ({
 	getMyCoupon: async () => {
 		try {
 			const response = await axios.get("/coupons");
-			set({ coupon: response.data }); //Updates Zustand’s global store by setting the coupon state to whatever was received from the backend.
+			set({ coupon: response.data });
 		} catch (error) {
 			console.error("Error fetching coupon:", error);
 		}

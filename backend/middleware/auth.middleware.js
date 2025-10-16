@@ -23,6 +23,7 @@
             }
 
             req.user = user; // Attach user info to request object
+            
             next(); // Continue to the next middleware or route handler
 
         } catch (error) {

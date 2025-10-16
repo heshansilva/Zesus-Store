@@ -6,13 +6,13 @@ const couponSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  discount: {
+  discountPercentage: {
     type: Number,
     min: 0,
     max: 100,
     required: true,
   },
-  expiryDate: {
+  expirationDate: {
     type: Date,
     required: true,
   },
@@ -22,8 +22,9 @@ const couponSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'User',  
     required: true,
+    unique: true
   }
 },
 { 

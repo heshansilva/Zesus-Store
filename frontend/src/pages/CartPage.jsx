@@ -56,15 +56,22 @@ const EmptyCartUI = () => (
 		initial={{ opacity: 0, y: 20 }}
 		animate={{ opacity: 1, y: 0 }}
 		transition={{ duration: 0.5 }}
-	>
-		<ShoppingCart className='h-24 w-24 text-gray-300' />
-		<h3 className='text-2xl font-semibold '>Your cart is empty</h3>
-		<p className='text-gray-400'>Looks like you {"haven't"} added anything to your cart yet.</p>
+		>
+		<ShoppingCart className='h-24 w-24 text-gray-500' /> {/* slightly lighter gray for contrast */}
+		
+		<h3 className='text-2xl font-semibold text-white'>Your cart is empty</h3>
+		
+		<p className='text-gray-400 text-center'>
+			Looks like you haven’t added anything to your cart yet.
+		</p>
+		
 		<Link
-			className='mt-4 rounded-md bg-emerald-500 px-6 py-2 text-white transition-colors hover:bg-emerald-600'
+			className='mt-4 rounded-md border border-gray-600 bg-black px-6 py-2 text-white transition-all 
+					hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-gray-500'
 			to='/'
 		>
 			Start Shopping
 		</Link>
-	</motion.div>
+</motion.div>
+
 );
